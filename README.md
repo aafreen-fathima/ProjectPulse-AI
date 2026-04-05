@@ -476,8 +476,8 @@ Every feature in this product maps directly to the internship's required compete
 
 ## Author
 
-**[Your Name]**  
-Data Analytics & AI · Portfolio 2025  
+**Aafreen Fathima**  
+ 
 [LinkedIn](https://linkedin.com/in/your-profile) · [Portfolio](https://your-portfolio.com) · [Email](mailto:your@email.com)
 
 ---
