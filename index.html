@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ProjectPulse AI — Intelligent PMO Command Centre</title>
+  <meta name="description" content="AI-native PMO platform. Real-time governance, XGBoost risk prediction, and auto-generated executive reports via a 5-agent LangGraph pipeline." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0f;
+      --surface: #111118;
+      --surface2: #1a1a24;
+      --border: rgba(255,255,255,0.07);
+      --border-hover: rgba(255,255,255,0.14);
+      --text: #e8e8f0;
+      --text-muted: #7a7a90;
+      --text-dim: #44445a;
+      --accent: #7c6df5;
+      --accent-soft: rgba(124,109,245,0.12);
+      --accent-glow: rgba(124,109,245,0.25);
+      --green: #2dd4a0;
+      --green-soft: rgba(45,212,160,0.1);
+      --amber: #f5a623;
+      --amber-soft: rgba(245,166,35,0.1);
+      --red: #f56565;
+      --red-soft: rgba(245,101,101,0.1);
+      --font: 'DM Sans', sans-serif;
+      --mono: 'DM Mono', monospace;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      font-size: 15px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── scrollbar ── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 3px; }
+
+    /* ── nav ── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 40px; height: 60px;
+      background: rgba(10,10,15,0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 15px; font-weight: 500; letter-spacing: -0.01em; color: var(--text);
+      text-decoration: none;
+    }
+    .logo-mark {
+      width: 28px; height: 28px; border-radius: 8px;
+      background: var(--accent); display: flex; align-items: center; justify-content: center;
+    }
+    .logo-mark svg { width: 14px; height: 14px; }
+    .nav-links { display: flex; align-items: center; gap: 28px; }
+    .nav-links a {
+      font-size: 13px; color: var(--text-muted); text-decoration: none;
+      transition: color .15s; letter-spacing: .01em;
+    }
+    .nav-links a:hover { color: var(--text); }
+    .nav-cta {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 13px; font-weight: 500; font-family: var(--font);
+      padding: 8px 18px; border-radius: 8px;
+      background: var(--accent); color: #fff;
+      border: none; cursor: pointer; text-decoration: none;
+      transition: opacity .15s, transform .1s;
+    }
+    .nav-cta:hover { opacity: .88; transform: translateY(-1px); }
+
+    /* ── sections ── */
+    section { padding: 80px 40px; max-width: 1080px; margin: 0 auto; }
+    .section-label {
+      display: inline-block; font-size: 11px; font-weight: 500;
+      font-family: var(--mono); color: var(--accent); letter-spacing: .1em;
+      text-transform: uppercase; margin-bottom: 12px;
+    }
+    h1 { font-size: clamp(36px, 5vw, 58px); font-weight: 300; line-height: 1.1; letter-spacing: -0.03em; }
+    h1 strong { font-weight: 500; }
+    h2 { font-size: 28px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.2; }
+    h3 { font-size: 15px; font-weight: 500; letter-spacing: -0.01em; margin-bottom: 6px; }
+    p { color: var(--text-muted); line-height: 1.75; }
+
+    /* ── hero ── */
+    #hero {
+      padding-top: 120px; padding-bottom: 100px;
+      border-bottom: 1px solid var(--border);
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 7px;
+      font-size: 12px; color: var(--text-muted);
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 20px; padding: 5px 12px; margin-bottom: 28px;
+      font-family: var(--mono);
+    }
+    .badge-pulse {
+      width: 7px; height: 7px; border-radius: 50%; background: var(--green);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50% { opacity: .5; transform: scale(.85); }
+    }
+    .hero-title { margin-bottom: 22px; }
+    .hero-title .accent { color: var(--accent); }
+    .hero-sub {
+      font-size: 17px; color: var(--text-muted); max-width: 520px;
+      line-height: 1.7; margin-bottom: 36px; font-weight: 300;
+    }
+    .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 64px; }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 14px; font-weight: 500; font-family: var(--font);
+      padding: 12px 24px; border-radius: 10px;
+      background: var(--accent); color: #fff; border: none; cursor: pointer;
+      text-decoration: none; transition: opacity .15s, transform .1s;
+    }
+    .btn-primary:hover { opacity: .88; transform: translateY(-1px); }
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 14px; font-family: var(--font);
+      padding: 12px 24px; border-radius: 10px; font-weight: 400;
+      background: transparent; color: var(--text-muted);
+      border: 1px solid var(--border); cursor: pointer; text-decoration: none;
+      transition: border-color .15s, color .15s;
+    }
+    .btn-secondary:hover { border-color: var(--border-hover); color: var(--text); }
+
+    .hero-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+    .stat-card { background: var(--surface); padding: 24px 20px; }
+    .stat-val { font-size: 26px; font-weight: 400; letter-spacing: -0.03em; color: var(--text); margin-bottom: 4px; font-family: var(--mono); }
+    .stat-label { font-size: 12px; color: var(--text-dim); line-height: 1.4; }
+
+    /* ── problem ── */
+    #problem { border-bottom: 1px solid var(--border); }
+    .problem-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 36px; }
+    .problem-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 22px;
+      transition: border-color .2s;
+    }
+    .problem-card:hover { border-color: var(--border-hover); }
+    .prob-icon {
+      width: 32px; height: 32px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center; margin-bottom: 14px;
+    }
+    .prob-title { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 6px; }
+    .prob-body { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+
+    /* ── modules ── */
+    #modules { border-bottom: 1px solid var(--border); }
+    .modules-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 36px; margin-bottom: 12px; }
+    .mod-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 18px; cursor: pointer;
+      transition: border-color .15s, background .15s;
+    }
+    .mod-card:hover { border-color: var(--border-hover); }
+    .mod-card.active { border-color: var(--accent); background: var(--accent-soft); }
+    .mod-num { font-size: 10px; font-family: var(--mono); color: var(--accent); margin-bottom: 8px; letter-spacing: .08em; }
+    .mod-title { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
+    .mod-short { font-size: 12px; color: var(--text-dim); }
+    .mod-detail {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 24px;
+    }
+    .mod-detail-title { font-size: 15px; font-weight: 500; color: var(--text); margin-bottom: 10px; }
+    .mod-detail-body { font-size: 13px; color: var(--text-muted); line-height: 1.75; margin-bottom: 14px; }
+    .mod-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .mod-tag {
+      font-size: 11px; font-family: var(--mono); padding: 3px 9px;
+      border-radius: 4px; background: var(--surface2);
+      border: 1px solid var(--border); color: var(--text-dim);
+    }
+
+    /* ── workflow ── */
+    #workflow { border-bottom: 1px solid var(--border); }
+    .workflow { margin-top: 36px; }
+    .wf-step {
+      display: flex; gap: 20px; padding: 20px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .wf-step:last-child { border-bottom: none; }
+    .wf-time {
+      font-family: var(--mono); font-size: 12px; color: var(--accent);
+      min-width: 52px; padding-top: 2px; flex-shrink: 0;
+    }
+    .wf-title { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 5px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .wf-body { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+    .pill {
+      font-size: 10px; font-weight: 500; font-family: var(--mono);
+      padding: 2px 8px; border-radius: 10px; letter-spacing: .04em;
+    }
+    .pill-ai { background: var(--accent-soft); color: var(--accent); border: 1px solid rgba(124,109,245,0.2); }
+    .pill-auto { background: var(--green-soft); color: var(--green); border: 1px solid rgba(45,212,160,0.2); }
+
+    /* ── stack ── */
+    #stack { border-bottom: 1px solid var(--border); }
+    .stack-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; margin-top: 36px; }
+    .stack-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 14px; border-radius: 8px;
+      background: var(--surface); border: 1px solid var(--border);
+      transition: border-color .15s;
+    }
+    .stack-row:hover { border-color: var(--border-hover); }
+    .stack-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .stack-name { font-size: 13px; font-weight: 500; color: var(--text); flex: 1; }
+    .stack-role { font-size: 11px; color: var(--text-dim); font-family: var(--mono); }
+
+    /* ── pricing ── */
+    #pricing { border-bottom: 1px solid var(--border); }
+    .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 36px; }
+    .price-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 24px;
+      transition: border-color .15s;
+    }
+    .price-card:hover { border-color: var(--border-hover); }
+    .price-card.featured { border-color: var(--accent); }
+    .price-plan { font-size: 11px; font-family: var(--mono); color: var(--text-muted); letter-spacing: .08em; margin-bottom: 10px; }
+    .price-plan.accent-label { color: var(--accent); }
+    .price-amount { font-size: 32px; font-weight: 300; letter-spacing: -0.04em; color: var(--text); font-family: var(--mono); }
+    .price-period { font-size: 12px; color: var(--text-dim); margin-top: 2px; margin-bottom: 18px; }
+    .price-features { list-style: none; margin-bottom: 20px; }
+    .price-features li {
+      font-size: 13px; color: var(--text-muted); padding: 7px 0;
+      border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 9px;
+    }
+    .price-features li:last-child { border-bottom: none; }
+    .feat-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+    .price-btn {
+      width: 100%; padding: 10px; border-radius: 8px;
+      font-size: 13px; font-weight: 500; font-family: var(--font); cursor: pointer;
+      border: 1px solid var(--border); background: transparent; color: var(--text-muted);
+      transition: all .15s;
+    }
+    .price-btn:hover { border-color: var(--border-hover); color: var(--text); }
+    .price-btn.featured-btn { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .price-btn.featured-btn:hover { opacity: .88; }
+
+    /* ── footer ── */
+    footer {
+      padding: 32px 40px; max-width: 1080px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+    }
+    .footer-left { font-size: 13px; color: var(--text-dim); }
+    .footer-left strong { color: var(--text-muted); font-weight: 500; }
+    .footer-links { display: flex; gap: 20px; }
+    .footer-links a { font-size: 13px; color: var(--text-dim); text-decoration: none; transition: color .15s; }
+    .footer-links a:hover { color: var(--text-muted); }
+
+    /* ── divider ── */
+    .full-divider { border: none; border-top: 1px solid var(--border); }
+
+    /* ── responsive ── */
+    @media (max-width: 768px) {
+      nav { padding: 0 20px; }
+      .nav-links { display: none; }
+      section { padding: 60px 20px; }
+      #hero { padding-top: 80px; }
+      .hero-stats { grid-template-columns: repeat(2, 1fr); }
+      .problem-grid { grid-template-columns: 1fr; }
+      .modules-grid { grid-template-columns: 1fr; }
+      .pricing-grid { grid-template-columns: 1fr; }
+      .stack-grid { grid-template-columns: 1fr; }
+      footer { padding: 24px 20px; flex-direction: column; align-items: flex-start; }
+    }
+
+    /* ── animations ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up { animation: fadeUp .5s ease both; }
+    .fade-up-1 { animation-delay: .05s; }
+    .fade-up-2 { animation-delay: .12s; }
+    .fade-up-3 { animation-delay: .2s; }
+    .fade-up-4 { animation-delay: .28s; }
+  </style>
+</head>
+<body>
+
+<!-- ── NAV ── -->
+<nav>
+  <a class="nav-logo" href="#">
+    <div class="logo-mark">
+      <svg viewBox="0 0 14 14" fill="none">
+        <rect x="1" y="1" width="5" height="5" rx="1.5" fill="white"/>
+        <rect x="8" y="1" width="5" height="5" rx="1.5" fill="white" opacity=".5"/>
+        <rect x="1" y="8" width="5" height="5" rx="1.5" fill="white" opacity=".5"/>
+        <rect x="8" y="8" width="5" height="5" rx="1.5" fill="white"/>
+      </svg>
+    </div>
+    ProjectPulse AI
+  </a>
+  <div class="nav-links">
+    <a href="#problem">Problem</a>
+    <a href="#modules">Features</a>
+    <a href="#workflow">How it works</a>
+    <a href="#stack">Stack</a>
+    <a href="#pricing">Pricing</a>
+  </div>
+  <a class="nav-cta" href="https://github.com/your-username/projectpulse-ai" target="_blank">
+    View on GitHub
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 9.5L9.5 2.5M9.5 2.5H4M9.5 2.5V8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </a>
+</nav>
+
+<!-- ── HERO ── -->
+<section id="hero">
+  <div class="hero-badge fade-up">
+    <span class="badge-pulse"></span>
+    Portfolio project · Data Analytics &amp; AI internship 2025
+  </div>
+  <h1 class="hero-title fade-up fade-up-1">
+    Your PMO on<br><strong class="accent">autopilot.</strong><br>Governance that thinks.
+  </h1>
+  <p class="hero-sub fade-up fade-up-2">
+    ProjectPulse AI replaces manual status chasing with an intelligent governance layer — real-time Kanban, XGBoost risk prediction, and auto-generated executive reports via a 5-agent LangGraph pipeline.
+  </p>
+  <div class="hero-actions fade-up fade-up-3">
+    <a class="btn-primary" href="#workflow">
+      See how it works
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M7.5 3.5L11 7l-3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
+    <a class="btn-secondary" href="https://github.com/your-username/projectpulse-ai" target="_blank">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+      View on GitHub
+    </a>
+  </div>
+  <div class="hero-stats fade-up fade-up-4">
+    <div class="stat-card">
+      <div class="stat-val">4–6 hrs</div>
+      <div class="stat-label">saved per PMO user each week</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val">&lt; 4 min</div>
+      <div class="stat-label">full executive report generation</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val">F1 &gt;.78</div>
+      <div class="stat-label">risk prediction accuracy target</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val">$5–8M</div>
+      <div class="stat-label">target ARR at Series A</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── PROBLEM ── -->
+<section id="problem">
+  <span class="section-label">The problem</span>
+  <h2>PMOs spend 60–70% of their time<br>on manual work</h2>
+  <div class="problem-grid">
+    <div class="problem-card">
+      <div class="prob-icon" style="background:rgba(124,109,245,.12)">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <rect x="1" y="1" width="6" height="6" rx="1.5" fill="#7c6df5" opacity=".9"/>
+          <rect x="9" y="1" width="6" height="6" rx="1.5" fill="#7c6df5" opacity=".4"/>
+          <rect x="1" y="9" width="6" height="6" rx="1.5" fill="#7c6df5" opacity=".4"/>
+          <rect x="9" y="9" width="6" height="6" rx="1.5" fill="#7c6df5" opacity=".9"/>
+        </svg>
+      </div>
+      <p class="prob-title">Fragmented tooling</p>
+      <p class="prob-body">Tasks in JIRA, budgets in Excel, decisions in Teams — no single source of truth for portfolio health at any moment.</p>
+    </div>
+    <div class="problem-card">
+      <div class="prob-icon" style="background:rgba(245,166,35,.1)">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <circle cx="8" cy="8" r="6.5" stroke="#f5a623" stroke-width="1"/>
+          <path d="M8 4.5v4l2.5 1.5" stroke="#f5a623" stroke-width="1.2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <p class="prob-title">Reactive risk management</p>
+      <p class="prob-body">A Sprint 3 blocker doesn't visibly threaten the Q4 launch until Sprint 9 — when recovery is expensive.</p>
+    </div>
+    <div class="problem-card">
+      <div class="prob-icon" style="background:rgba(45,212,160,.08)">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <rect x="1" y="3" width="14" height="2" rx="1" fill="#2dd4a0" opacity=".9"/>
+          <rect x="1" y="7.5" width="9" height="2" rx="1" fill="#2dd4a0" opacity=".5"/>
+          <rect x="1" y="12" width="11" height="2" rx="1" fill="#2dd4a0" opacity=".5"/>
+        </svg>
+      </div>
+      <p class="prob-title">Manual Sunday-night reporting</p>
+      <p class="prob-body">PMO analysts spend hours copy-pasting status into decks instead of doing work that actually prevents delays.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── MODULES ── -->
+<section id="modules">
+  <span class="section-label">Core features</span>
+  <h2>Six integrated modules</h2>
+  <div class="modules-grid" id="modGrid"></div>
+  <div class="mod-detail">
+    <p class="mod-detail-title" id="modDetailTitle">Select a module above</p>
+    <p class="mod-detail-body" id="modDetailBody">Each module maps directly to a PM or data science responsibility. Click any card to explore it.</p>
+    <div class="mod-tags" id="modDetailTags"></div>
+  </div>
+</section>
+
+<!-- ── WORKFLOW ── -->
+<section id="workflow">
+  <span class="section-label">How it works</span>
+  <h2>Monday morning in 15 minutes</h2>
+  <p style="margin-top:10px;max-width:480px">What used to take 2 hours of manual work — done and delivered before the first standup.</p>
+  <div class="workflow">
+    <div class="wf-step">
+      <span class="wf-time">8:00am</span>
+      <div>
+        <p class="wf-title">System ingests overnight data <span class="pill pill-auto">automated</span></p>
+        <p class="wf-body">JIRA webhooks, SQL budget actuals, and SharePoint docs are pulled and merged into a unified pandas DataFrame.</p>
+      </div>
+    </div>
+    <div class="wf-step">
+      <span class="wf-time">8:01am</span>
+      <div>
+        <p class="wf-title">XGBoost scores every deliverable <span class="pill pill-ai">AI · XGBoost</span></p>
+        <p class="wf-body">50+ features: task age, velocity trend, dependency depth, sentiment score. Two projects flagged at >65% slippage probability.</p>
+      </div>
+    </div>
+    <div class="wf-step">
+      <span class="wf-time">8:02am</span>
+      <div>
+        <p class="wf-title">Gap analysis computes variances <span class="pill pill-auto">automated</span></p>
+        <p class="wf-body">Schedule variance, budget variance, and scope creep delta computed in pandas and written to Supabase.</p>
+      </div>
+    </div>
+    <div class="wf-step">
+      <span class="wf-time">8:03am</span>
+      <div>
+        <p class="wf-title">Claude API drafts the executive report <span class="pill pill-ai">AI · Claude</span></p>
+        <p class="wf-body">Plotly charts + structured metrics fed into the narrative agent → 600-word branded executive summary with headline finding, risk escalation, and recommended actions.</p>
+      </div>
+    </div>
+    <div class="wf-step">
+      <span class="wf-time">8:05am</span>
+      <div>
+        <p class="wf-title">PMO lead reviews and approves <span class="pill pill-auto">1 click</span></p>
+        <p class="wf-body">Dashboard shows risk flags with SHAP explanations, a drafted stakeholder email, and mitigation recommendations. Approve with one click.</p>
+      </div>
+    </div>
+    <div class="wf-step">
+      <span class="wf-time">8:15am</span>
+      <div>
+        <p class="wf-title">Report delivered to all stakeholders <span class="pill pill-auto">automated</span></p>
+        <p class="wf-body">Resend emails the PDF + PowerPoint deck to the exec list. Supabase audit log updated. SharePoint archive synced. Done.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── STACK ── -->
+<section id="stack">
+  <span class="section-label">Tech stack</span>
+  <h2>Built on modern SaaS infrastructure</h2>
+  <p style="margin-top:10px;max-width:480px">Zero server management. $0/month until first paying customer on free tiers.</p>
+  <div class="stack-grid">
+    <div class="stack-row">
+      <span class="stack-dot" style="background:#7c6df5"></span>
+      <span class="stack-name">Claude API</span>
+      <span class="stack-role">claude-sonnet-4-6 · narrative</span>
+    </div>
+    <div class="stack-row">
+      <span class="stack-dot" style="background:#2dd4a0"></span>
+      <span class="stack-name">Supabase</span>
+      <span class="stack-role">PostgreSQL · real-time</span>
+    </div>
+    <div class="stack-row">
+      <span class="stack-dot" style="background:#e8e8f0"></span>
+      <span class="stack-name">Vercel + Next.js 14</span>
+      <span class="stack-role">frontend · serverless routes</span>
+    </div>
+    <div class="stack-row">
+      <span class="stack-dot" style="background:#7c6df5"></span>
+      <span class="stack-name">Clerk</span>
+      <span class="stack-role">auth · org management · roles</span>
+    </div>
+    <div class="stack-row">
+      <span class="stack-dot" style="background:#f5a623"></span>
+      <span class="stack-name">LangGraph + Python</span>
+      <span class="stack-role">multi-agent pipeline</span>
+    </div>
+    <div class="stack-row">
+      <span class="stack-dot" style="background:#f5a623"></span>
+      <span class="stack-name">XGBoost + SHAP</span>
+      <span class="stack-role">risk prediction · explainability</span>
+    </div>
+    <div class="stack-row">
+      <span class="stack-dot" style="background:#7c6df5"></span>
+      <span class="stack-name">Stripe</span>
+      <span class="stack-role">subscription billing · webhooks</span>
+    </div>
+    <div class="stack-row">
+      <span class="stack-dot" style="background:#2dd4a0"></span>
+      <span class="stack-name">Pinecone</span>
+      <span class="stack-role">vector DB · semantic search</span>
+    </div>
+    <div class="stack-row">
+      <span class="stack-dot" style="background:#f56565"></span>
+      <span class="stack-name">Upstash Redis</span>
+      <span class="stack-role">cache · job queue</span>
+    </div>
+    <div class="stack-row">
+      <span class="stack-dot" style="background:#2dd4a0"></span>
+      <span class="stack-name">Resend</span>
+      <span class="stack-role">transactional email · reports</span>
+    </div>
+  </div>
+</section>
+
+<!-- ── PRICING ── -->
+<section id="pricing">
+  <span class="section-label">Business model</span>
+  <h2>Tiered SaaS — built to expand</h2>
+  <p style="margin-top:10px;max-width:480px">Priced to land on a departmental budget without procurement and expand to org-wide contracts.</p>
+  <div class="pricing-grid">
+    <div class="price-card">
+      <p class="price-plan">STARTER</p>
+      <p class="price-amount">$299</p>
+      <p class="price-period">per month</p>
+      <ul class="price-features">
+        <li><span class="feat-dot"></span>Up to 5 projects</li>
+        <li><span class="feat-dot"></span>10 users</li>
+        <li><span class="feat-dot"></span>JIRA + Excel integrations</li>
+        <li><span class="feat-dot"></span>Weekly report generation</li>
+        <li><span class="feat-dot"></span>Basic Kanban dashboard</li>
+      </ul>
+      <button class="price-btn">Get started</button>
+    </div>
+    <div class="price-card featured">
+      <p class="price-plan accent-label">GROWTH · MOST POPULAR</p>
+      <p class="price-amount">$899</p>
+      <p class="price-period">per month</p>
+      <ul class="price-features">
+        <li><span class="feat-dot"></span>Up to 25 projects</li>
+        <li><span class="feat-dot"></span>50 users</li>
+        <li><span class="feat-dot"></span>All integrations incl. Teams</li>
+        <li><span class="feat-dot"></span>AI risk engine + SHAP</li>
+        <li><span class="feat-dot"></span>Meeting-to-action pipeline</li>
+      </ul>
+      <button class="price-btn featured-btn">Get started</button>
+    </div>
+    <div class="price-card">
+      <p class="price-plan">ENTERPRISE</p>
+      <p class="price-amount">$3,500+</p>
+      <p class="price-period">per month · custom</p>
+      <ul class="price-features">
+        <li><span class="feat-dot"></span>Unlimited projects + users</li>
+        <li><span class="feat-dot"></span>SSO / SAML</li>
+        <li><span class="feat-dot"></span>On-premise deployment</li>
+        <li><span class="feat-dot"></span>Custom model training</li>
+        <li><span class="feat-dot"></span>Dedicated CSM + SLA</li>
+      </ul>
+      <button class="price-btn">Contact sales</button>
+    </div>
+  </div>
+</section>
+
+<hr class="full-divider" />
+
+<!-- ── FOOTER ── -->
+<footer>
+  <p class="footer-left">ProjectPulse AI · Built by <strong>Your Name</strong> · Portfolio 2025</p>
+  <div class="footer-links">
+    <a href="https://github.com/your-username/projectpulse-ai" target="_blank">GitHub</a>
+    <a href="#" target="_blank">Case study</a>
+    <a href="https://linkedin.com/in/your-profile" target="_blank">LinkedIn</a>
+  </div>
+</footer>
+
+<script>
+  const modules = [
+    {
+      num: '01', title: 'AI Kanban governance', short: 'Live RAG-status board',
+      detail: 'Aggregates JIRA, SharePoint, and SQL into a unified live governance view. Projects are auto-rated Red/Amber/Green using a rule-based classifier scoring schedule variance, budget burn rate, and risk score. Updates on every JIRA webhook event via Supabase real-time — no manual refresh needed.',
+      tags: ['JIRA REST API', 'Supabase real-time', 'Next.js', 'RAG classifier']
+    },
+    {
+      num: '02', title: 'Risk prediction engine', short: 'XGBoost + SHAP',
+      detail: 'XGBoost model scores every active deliverable for slippage probability nightly. 50+ features including task age, assignee workload, dependency chain depth, velocity trend, and comment sentiment. SHAP values explain every flag in plain English. At >65% probability, a risk register entry is auto-created and routed to the project owner.',
+      tags: ['XGBoost', 'scikit-learn', 'SHAP', 'pandas', 'MLflow']
+    },
+    {
+      num: '03', title: 'Automated gap analysis', short: 'pandas + SQL weekly',
+      detail: 'Every Sunday, a Python cron job computes schedule variance, budget variance, scope creep indicators, and resource utilisation gaps. Output feeds the executive report and a filterable dashboard table. Exportable to Excel for stakeholders who prefer spreadsheets.',
+      tags: ['pandas', 'SQL', 'PostgreSQL', 'openpyxl', 'Vercel cron']
+    },
+    {
+      num: '04', title: 'Executive report generator', short: 'LangGraph + Claude API',
+      detail: '5-agent LangGraph pipeline runs every Monday 5am: collect → score → visualise → narrate → distribute. Claude (claude-sonnet-4-6) drafts a 600-word executive summary with headline finding, risk escalation, and recommended actions. Delivered as PDF + PowerPoint via Resend before the first standup.',
+      tags: ['LangGraph', 'Claude API', 'Plotly', 'python-pptx', 'Resend']
+    },
+    {
+      num: '05', title: 'Meeting-to-action pipeline', short: 'Whisper + BERT + JIRA',
+      detail: 'Meeting recordings (Teams/Zoom) ingested after every call → Whisper transcribes → BERT extracts action items, decisions, open questions → JIRA tickets auto-created with owner + due date → structured summary emailed to all attendees within 10 minutes of meeting end.',
+      tags: ['Whisper', 'BERT', 'transformers', 'JIRA API', 'Microsoft Graph']
+    },
+    {
+      num: '06', title: 'Continuous improvement', short: 'Feedback → retraining',
+      detail: 'Every corrective action is logged with timestamp and outcome. When a risk resolves, analysts label whether the AI prediction was accurate — creating a training dataset for quarterly model retraining. All past decisions stored as vector embeddings in Pinecone for semantic search answered by Claude.',
+      tags: ['Pinecone', 'sentence-transformers', 'MLflow', 'Claude API']
+    }
+  ];
+
+  const grid = document.getElementById('modGrid');
+  const detailTitle = document.getElementById('modDetailTitle');
+  const detailBody = document.getElementById('modDetailBody');
+  const detailTags = document.getElementById('modDetailTags');
+
+  modules.forEach((m, i) => {
+    const card = document.createElement('div');
+    card.className = 'mod-card';
+    card.id = 'mod_' + i;
+    card.innerHTML = `<p class="mod-num">${m.num}</p><p class="mod-title">${m.title}</p><p class="mod-short">${m.short}</p>`;
+    card.addEventListener('click', () => {
+      document.querySelectorAll('.mod-card').forEach(c => c.classList.remove('active'));
+      card.classList.add('active');
+      detailTitle.textContent = m.title;
+      detailBody.textContent = m.detail;
+      detailTags.innerHTML = m.tags.map(t => `<span class="mod-tag">${t}</span>`).join('');
+    });
+    grid.appendChild(card);
+  });
+
+  document.getElementById('mod_0').click();
+</script>
+</body>
+</html>

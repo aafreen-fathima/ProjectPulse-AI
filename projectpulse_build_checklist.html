@@ -1,0 +1,268 @@
+
+<style>
+* { box-sizing: border-box; }
+.phase { margin-bottom: 1.5rem; }
+.phase-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 0.5px solid var(--color-border-tertiary); }
+.phase-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.phase-title { font-size: 14px; font-weight: 500; color: var(--color-text-primary); margin: 0; flex: 1; }
+.phase-count { font-size: 12px; color: var(--color-text-tertiary); }
+.phase-bar-wrap { height: 3px; background: var(--color-background-secondary); border-radius: 2px; margin-bottom: 10px; }
+.phase-bar { height: 3px; border-radius: 2px; transition: width .3s; }
+.item { display: flex; align-items: flex-start; gap: 10px; padding: 8px 10px; border-radius: var(--border-radius-md); margin-bottom: 4px; cursor: pointer; transition: background .12s; }
+.item:hover { background: var(--color-background-secondary); }
+.item.done { opacity: 0.6; }
+.cb { width: 16px; height: 16px; border-radius: 4px; border: 1.5px solid var(--color-border-secondary); flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center; transition: all .15s; }
+.cb.checked { background: var(--color-text-success); border-color: var(--color-text-success); }
+.cb svg { display: none; }
+.cb.checked svg { display: block; }
+.item-text { flex: 1; }
+.item-label { font-size: 13px; color: var(--color-text-primary); line-height: 1.4; margin: 0 0 2px; }
+.item.done .item-label { text-decoration: line-through; color: var(--color-text-tertiary); }
+.item-meta { font-size: 11px; color: var(--color-text-tertiary); margin: 0; }
+.tag { display: inline-block; font-size: 10px; padding: 1px 6px; border-radius: 4px; margin-left: 5px; font-weight: 500; vertical-align: middle; }
+.tag-ai { background: var(--color-background-info); color: var(--color-text-info); }
+.tag-pm { background: var(--color-background-warning); color: var(--color-text-warning); }
+.tag-code { background: var(--color-background-secondary); color: var(--color-text-secondary); border: 0.5px solid var(--color-border-tertiary); }
+.tag-ship { background: var(--color-background-success); color: var(--color-text-success); }
+.progress-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+.progress-title { font-size: 13px; font-weight: 500; color: var(--color-text-primary); }
+.progress-pct { font-size: 20px; font-weight: 500; color: var(--color-text-primary); }
+.progress-wrap { height: 6px; background: var(--color-background-secondary); border-radius: 3px; margin-bottom: 1.25rem; }
+.progress-fill { height: 6px; border-radius: 3px; background: #1D9E75; transition: width .3s; }
+.action-row { display: flex; gap: 8px; margin-bottom: 1.5rem; flex-wrap: wrap; }
+</style>
+
+<div style="padding: 0.75rem 0 0">
+
+<div class="progress-header">
+  <span class="progress-title">Overall progress</span>
+  <span class="progress-pct" id="global-pct">0%</span>
+</div>
+<div class="progress-wrap"><div class="progress-fill" id="global-bar" style="width:0%"></div></div>
+
+<div class="action-row">
+  <button onclick="resetAll()" style="font-size:12px;padding:5px 12px">Reset all</button>
+  <button onclick="sendPrompt('Generate the Supabase SQL schema for ProjectPulse AI with all tables')" style="font-size:12px;padding:5px 12px">Get Supabase schema ↗</button>
+  <button onclick="sendPrompt('Generate the Next.js project folder structure for ProjectPulse AI')" style="font-size:12px;padding:5px 12px">Get project structure ↗</button>
+</div>
+
+<div id="checklist"></div>
+</div>
+
+<script>
+const phases = [
+  {
+    id: 'p1',
+    title: 'Phase 1 — Product case study',
+    color: '#534AB7',
+    items: [
+      { label: 'Write the 1-page problem statement', meta: 'PMO fragmentation, market size, your target user persona', tags: ['pm'] },
+      { label: 'Define the 6 core modules', meta: 'Kanban board, Risk engine, Gap analysis, Report gen, Meeting pipeline, CI tracker', tags: ['pm'] },
+      { label: 'Map every feature to a skill/responsibility', meta: 'Use the skill matrix from earlier — every row must have at least one tick', tags: ['pm'] },
+      { label: 'Draw the system architecture diagram', meta: 'Inputs → AI Core → Outputs — use the diagram from this conversation', tags: ['pm'] },
+      { label: 'Write the user story (Monday morning workflow)', meta: '8am → JIRA ingested → risk flagged → report approved → 8:15am done', tags: ['pm'] },
+      { label: 'Define the 3-tier business model + pricing', meta: 'Starter $299 / Growth $899 / Enterprise $3500+', tags: ['pm'] },
+      { label: 'List all KPIs with targets', meta: 'F1 > 0.78, report time < 4 min, NRR > 115%, etc.', tags: ['pm'] },
+      { label: 'Create the slide deck (6–8 slides)', meta: 'Problem → Solution → Architecture → Demo → Business model → KPIs', tags: ['pm'] },
+    ]
+  },
+  {
+    id: 'p2',
+    title: 'Phase 2 — Environment setup',
+    color: '#1D9E75',
+    items: [
+      { label: 'Buy domain on Namecheap', meta: 'projectpulseai.com (~$12/yr)', tags: ['ship'] },
+      { label: 'Create Cloudflare account and point DNS', meta: 'Free plan — add site, copy nameservers to Namecheap', tags: ['ship'] },
+      { label: 'Create GitHub repo', meta: 'Public repo: projectpulse-ai  |  Initialize with README', tags: ['code'] },
+      { label: 'Create Supabase project', meta: 'Free tier — note the project URL and anon key', tags: ['code'] },
+      { label: 'Create Vercel account and connect GitHub repo', meta: 'Import repo → auto-deploy on every push to main', tags: ['code'] },
+      { label: 'Create Clerk application', meta: 'Set up org-mode, add PMO lead / analyst / exec roles', tags: ['code'] },
+      { label: 'Create Anthropic API key', meta: 'console.anthropic.com — use claude-sonnet-4-6', tags: ['ai'] },
+      { label: 'Create Stripe account + 3 products', meta: 'Starter / Growth / Enterprise — get test API keys', tags: ['ship'] },
+      { label: 'Create Resend account + verify domain', meta: 'Add DNS TXT record — needed for report emails', tags: ['code'] },
+      { label: 'Create Upstash Redis database', meta: 'Free tier — note REST URL and token', tags: ['code'] },
+      { label: 'Create Pinecone index', meta: 'Dimension: 1536, metric: cosine, name: projectpulse-docs', tags: ['ai'] },
+      { label: 'Set up PostHog project', meta: 'Copy API key — tracks DAU, feature usage, funnels', tags: ['code'] },
+      { label: 'Set up Sentry project (Next.js)', meta: 'Copy DSN — catches frontend and pipeline errors', tags: ['code'] },
+      { label: 'Add all env vars to Vercel dashboard', meta: 'SUPABASE_URL, CLERK_KEY, ANTHROPIC_KEY, STRIPE_KEY, etc.', tags: ['code'] },
+    ]
+  },
+  {
+    id: 'p3',
+    title: 'Phase 3 — Database layer',
+    color: '#1D9E75',
+    items: [
+      { label: 'Write and run the Supabase SQL schema', meta: 'Tables: projects, milestones, risks, actions, reports, model_feedback', tags: ['code'] },
+      { label: 'Enable row-level security on all tables', meta: 'Policy: users can only see rows where org_id matches their Clerk org', tags: ['code'] },
+      { label: 'Seed the DB with 3 dummy projects', meta: 'Project Delta, Project Alpha, Project Omega — include milestones and risks', tags: ['code'] },
+      { label: 'Test Supabase REST queries in Postman', meta: 'GET /projects, POST /risks, PATCH /milestones — all working?', tags: ['code'] },
+      { label: 'Enable Supabase real-time on projects and risks tables', meta: 'Needed for live Kanban updates without page refresh', tags: ['code'] },
+    ]
+  },
+  {
+    id: 'p4',
+    title: 'Phase 4 — Next.js frontend scaffold',
+    color: '#BA7517',
+    items: [
+      { label: 'Scaffold Next.js 14 app with app router', meta: 'npx create-next-app@latest projectpulse-ai --typescript --tailwind', tags: ['code'] },
+      { label: 'Install and configure Clerk', meta: 'Wrap app in <ClerkProvider>, add sign-in and sign-up pages', tags: ['code'] },
+      { label: 'Install Supabase JS client', meta: 'npm i @supabase/supabase-js — create /lib/supabase.ts helper', tags: ['code'] },
+      { label: 'Build the app layout and sidebar nav', meta: 'Links: Dashboard / Projects / Risks / Reports / Settings', tags: ['code'] },
+      { label: 'Build the portfolio overview page', meta: 'Grid of project cards with RAG status badges — reads from Supabase', tags: ['code'] },
+      { label: 'Build the Kanban governance board', meta: '3 columns: On Track / At Risk / Critical — drag not needed for MVP', tags: ['code'] },
+      { label: 'Build the project detail page', meta: 'Milestones timeline, risk register table, AI recommendations section', tags: ['code'] },
+      { label: 'Build the executive summary dashboard', meta: '5 headline metrics + sparklines — read-only view for exec role', tags: ['code'] },
+      { label: 'Build the risk register table', meta: 'Sortable by score, filterable by status, exportable to CSV', tags: ['code'] },
+      { label: 'Make the Kanban board update in real-time via Supabase', meta: 'Subscribe to risks channel — badge updates live without refresh', tags: ['code'] },
+    ]
+  },
+  {
+    id: 'p5',
+    title: 'Phase 5 — AI pipeline (Python)',
+    color: '#534AB7',
+    items: [
+      { label: 'Set up Python environment', meta: 'python -m venv venv && pip install pandas scikit-learn xgboost langgraph anthropic', tags: ['code'] },
+      { label: 'Build the data collector script', meta: 'Queries Supabase via REST → returns DataFrame of project metrics', tags: ['code', 'ai'] },
+      { label: 'Build and train the XGBoost risk model', meta: 'Features: task_age, velocity_trend, dependency_depth, sentiment_score', tags: ['ai'] },
+      { label: 'Add SHAP explainability to risk scores', meta: 'pip install shap — generate top 3 feature contributions per project', tags: ['ai'] },
+      { label: 'Build the gap analysis script', meta: 'pandas: compute schedule variance, budget variance, scope creep delta', tags: ['code', 'ai'] },
+      { label: 'Build the visualiser agent', meta: 'plotly charts: risk heatmap, burn-down, budget waterfall, risk trend', tags: ['ai'] },
+      { label: 'Build the narrative agent (Claude API)', meta: 'Structured prompt → claude-sonnet-4-6 → 600-word executive summary', tags: ['ai'] },
+      { label: 'Wire all agents into a LangGraph pipeline', meta: 'Nodes: collect → score → visualise → narrate → format → distribute', tags: ['ai'] },
+      { label: 'Build the formatter agent', meta: 'python-pptx: assemble branded slide deck from charts + narrative', tags: ['code'] },
+      { label: 'Build the distributor agent', meta: 'Resend API: email report PDF + deck to stakeholder list from Supabase', tags: ['code'] },
+      { label: 'Expose the pipeline as a Vercel API route', meta: 'POST /api/generate-report → triggers the LangGraph pipeline', tags: ['code'] },
+      { label: 'Test the full pipeline end-to-end', meta: 'Trigger manually → check Resend inbox → verify Supabase report log', tags: ['ai'] },
+    ]
+  },
+  {
+    id: 'p6',
+    title: 'Phase 6 — Payments + email',
+    color: '#D85A30',
+    items: [
+      { label: 'Build the Stripe checkout flow', meta: '/api/checkout → creates Stripe session for selected plan', tags: ['code', 'ship'] },
+      { label: 'Build the Stripe webhook handler', meta: '/api/webhooks/stripe → updates users.plan in Supabase on payment success', tags: ['code'] },
+      { label: 'Add plan-based feature gating in the UI', meta: 'Starter: 5 projects max / Growth: 25 / Enterprise: unlimited', tags: ['code'] },
+      { label: 'Build the pricing page', meta: 'Three tier cards with feature lists and Stripe checkout buttons', tags: ['code', 'ship'] },
+      { label: 'Set up Resend weekly report cron', meta: 'Vercel cron job every Monday 5am → POST /api/generate-report', tags: ['code'] },
+      { label: 'Build the risk alert email template', meta: 'HTML email: project name, risk score, SHAP explanation, action link', tags: ['code'] },
+    ]
+  },
+  {
+    id: 'p7',
+    title: 'Phase 7 — Search + memory layer',
+    color: '#185FA5',
+    items: [
+      { label: 'Install sentence-transformers', meta: 'pip install sentence-transformers — embed reports and meeting notes', tags: ['ai'] },
+      { label: 'Build the Pinecone indexing script', meta: 'On each new report: chunk → embed → upsert to Pinecone with metadata', tags: ['ai'] },
+      { label: 'Build the semantic search API route', meta: 'POST /api/search → embed query → Pinecone query → Claude synthesises answer', tags: ['ai'] },
+      { label: 'Build the search UI component', meta: 'Input bar on dashboard: "What did we decide about the Q4 launch?"', tags: ['code'] },
+      { label: 'Build the Upstash cache layer', meta: 'Cache latest risk scores per project — invalidate on new report run', tags: ['code'] },
+    ]
+  },
+  {
+    id: 'p8',
+    title: 'Phase 8 — Analytics + observability',
+    color: '#888780',
+    items: [
+      { label: 'Install PostHog in Next.js', meta: 'npm i posthog-js — wrap _app with PostHogProvider', tags: ['code'] },
+      { label: 'Track key product events', meta: 'report_generated, risk_flagged, search_used, plan_upgraded', tags: ['code'] },
+      { label: 'Install Sentry in Next.js and Python pipeline', meta: 'npm i @sentry/nextjs + pip install sentry-sdk', tags: ['code'] },
+      { label: 'Build the internal analytics dashboard', meta: 'PostHog insight: WAU, report open rate, pipeline errors — embed in /admin', tags: ['code'] },
+      { label: 'Set up MLflow for model versioning', meta: 'pip install mlflow — log XGBoost runs, F1 scores, feature importance', tags: ['ai'] },
+    ]
+  },
+  {
+    id: 'p9',
+    title: 'Phase 9 — Portfolio presentation',
+    color: '#993C1D',
+    items: [
+      { label: 'Record a 3-minute Loom demo walkthrough', meta: 'Monday morning workflow: login → Kanban → risk alert → report in inbox', tags: ['ship'] },
+      { label: 'Write the GitHub README as a case study', meta: 'Problem → Architecture diagram → Tech stack → Screenshots → Live demo link', tags: ['ship', 'pm'] },
+      { label: 'Deploy to production on Vercel', meta: 'Connect custom domain from Cloudflare — test SSL certificate', tags: ['ship'] },
+      { label: 'Write the 1-page product spotlight doc', meta: 'Problem / Solution / Architecture / Business model / KPIs — PDF format', tags: ['pm', 'ship'] },
+      { label: 'Add to portfolio / LinkedIn as a featured project', meta: 'Pin the GitHub repo, add live demo link, write a 3-sentence LinkedIn post', tags: ['ship'] },
+      { label: 'Prepare the interview talking points', meta: 'Map each module to an internship responsibility — ready to walk through in 5 min', tags: ['pm', 'ship'] },
+    ]
+  }
+];
+
+const state = {};
+phases.forEach(p => p.items.forEach((it, i) => { state[p.id + '_' + i] = false; }));
+
+function totalItems() { return Object.keys(state).length; }
+function doneCount() { return Object.values(state).filter(Boolean).length; }
+
+function updateGlobal() {
+  const pct = Math.round(doneCount() / totalItems() * 100);
+  document.getElementById('global-pct').textContent = pct + '%';
+  document.getElementById('global-bar').style.width = pct + '%';
+}
+
+function updatePhaseBar(pid, items) {
+  const done = items.filter((_, i) => state[pid + '_' + i]).length;
+  const pct = Math.round(done / items.length * 100);
+  const bar = document.getElementById('bar_' + pid);
+  const cnt = document.getElementById('cnt_' + pid);
+  if (bar) bar.style.width = pct + '%';
+  if (cnt) cnt.textContent = done + '/' + items.length;
+}
+
+function toggle(pid, idx) {
+  const key = pid + '_' + idx;
+  state[key] = !state[key];
+  const item = document.getElementById('item_' + key);
+  const cb = document.getElementById('cb_' + key);
+  if (state[key]) { item.classList.add('done'); cb.classList.add('checked'); }
+  else { item.classList.remove('done'); cb.classList.remove('checked'); }
+  updatePhaseBar(pid, phases.find(p => p.id === pid).items);
+  updateGlobal();
+}
+
+function resetAll() {
+  Object.keys(state).forEach(k => { state[k] = false; });
+  document.querySelectorAll('.item').forEach(el => el.classList.remove('done'));
+  document.querySelectorAll('.cb').forEach(el => el.classList.remove('checked'));
+  phases.forEach(p => updatePhaseBar(p.id, p.items));
+  updateGlobal();
+}
+
+function tagHTML(tags) {
+  return tags.map(t => {
+    if (t === 'ai') return '<span class="tag tag-ai">AI</span>';
+    if (t === 'pm') return '<span class="tag tag-pm">PM</span>';
+    if (t === 'ship') return '<span class="tag tag-ship">ship</span>';
+    return '<span class="tag tag-code">code</span>';
+  }).join('');
+}
+
+const cl = document.getElementById('checklist');
+phases.forEach(p => {
+  const div = document.createElement('div');
+  div.className = 'phase';
+  let itemsHTML = p.items.map((it, i) => `
+    <div class="item" id="item_${p.id}_${i}" onclick="toggle('${p.id}', ${i})">
+      <div class="cb" id="cb_${p.id}_${i}">
+        <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+          <path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="item-text">
+        <p class="item-label">${it.label}${tagHTML(it.tags)}</p>
+        <p class="item-meta">${it.meta}</p>
+      </div>
+    </div>`).join('');
+
+  div.innerHTML = `
+    <div class="phase-header">
+      <span class="phase-dot" style="background:${p.color}"></span>
+      <span class="phase-title">${p.title}</span>
+      <span class="phase-count" id="cnt_${p.id}">0/${p.items.length}</span>
+    </div>
+    <div class="phase-bar-wrap"><div class="phase-bar" id="bar_${p.id}" style="width:0%;background:${p.color}"></div></div>
+    ${itemsHTML}`;
+  cl.appendChild(div);
+});
+
+updateGlobal();
+</script>
