@@ -2,12 +2,6 @@
 
 > Autonomous PMO copilot that turns scattered project signals into governance-ready decisions before the Monday standup.
 
-[![Live demo](https://img.shields.io/badge/demo-projectpulseai.com-7c3aed?style=flat-square)](https://demo.projectpulseai.com)
-[![Case study](https://img.shields.io/badge/case_study-PDF-1e293b?style=flat-square)](https://projectpulseai.com/case-study.pdf)
-[![Stack](https://img.shields.io/badge/stack-Next.js%2014%20·%20Supabase%20·%20LangGraph-0ea5e9?style=flat-square)](#tech-stack)
-[![License](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)](LICENSE)
-
----
 
 ## The problem
 
@@ -170,10 +164,4 @@ npm run dev
 - [ ] Phase 8 — Analytics + observability
 - [ ] Phase 9 — Portfolio polish + deploy
 
-## License
 
-MIT — see [LICENSE](LICENSE).
-
----
-
-Built by [@reen](https://linkedin.com/in/<you>). [Live demo](https://demo.projectpulseai.com) · [Case study PDF](https://projectpulseai.com/case-study.pdf)
